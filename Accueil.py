@@ -1,189 +1,219 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
-import json
+
+# Simuler la base de données des enfants avec une liste de dictionnaires
+enfants = [
+    {"prenom": "Alice", "solde": 100, "argent_poche": 20, "frequence": "hebdomadaire", "paypal": "", "iban": "", "historique": []},
+    {"prenom": "Maxence", "solde": 50, "argent_poche": 10, "frequence": "mensuelle", "paypal": "maxence@example.com", "iban": "", "historique": []},
+]
 
 class TirelireApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Gestion de la Tirelire")
-        self.root.geometry("600x400")
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Gestion de la tirelire des enfants")
+        self.master.geometry("500x400")
 
-        # Charger les profils d'enfants depuis le fichier JSON
-        self.enfants = self.charger_enfants()
+        # Frame principale
+        self.frame_accueil = tk.Frame(self.master)
+        self.frame_accueil.pack(pady=20)
 
-        # Création de la frame principale
-        self.frame_accueil = tk.Frame(self.root)
-        self.frame_accueil.pack(fill="both", expand=True)
-
-        # Bouton pour créer un nouveau profil
-        self.bouton_creation = tk.Button(self.frame_accueil, text="Créer un nouveau profil", command=self.creer_profil)
-        self.bouton_creation.pack(pady=10)
-
-        # Afficher les boutons pour chaque enfant existant
+        # Boutons des enfants et bouton de création
         self.afficher_boutons_enfants()
 
-    def charger_enfants(self):
-        """Charge les profils d'enfants à partir du fichier JSON"""
-        try:
-            with open("enfants.json", "r") as file:
-                return json.load(file)
-        except FileNotFoundError:
-            return []  # Retourne une liste vide si le fichier n'existe pas
-
-    def sauvegarder_enfants(self):
-        """Sauvegarde les profils des enfants dans un fichier JSON"""
-        with open("enfants.json", "w") as file:
-            json.dump(self.enfants, file, indent=4)
-
     def afficher_boutons_enfants(self):
-        """Affiche un bouton pour chaque enfant dans le profil"""
-        # D'abord, on nettoie le frame de l'interface pour éviter les doublons de boutons
-        for widget in self.frame_accueil.winfo_children():
-            if widget != self.bouton_creation:  # Conserver le bouton de création
-                widget.destroy()  # Efface les anciens widgets
+        """Affiche les boutons pour chaque enfant et le bouton de création."""
+        for enfant in enfants:
+            bouton = tk.Button(self.frame_accueil, text=enfant["prenom"], command=lambda e=enfant: self.afficher_profil(e))
+            bouton.pack(pady=10)
 
-        # Afficher de nouveau le bouton de création
-        self.bouton_creation.pack(pady=10)
+        bouton_creation = tk.Button(self.frame_accueil, text="Créer un nouveau profil", command=self.creer_nouveau_profil)
+        bouton_creation.pack(pady=10)
 
-        # Afficher les boutons des enfants
-        for i, enfant in enumerate(self.enfants):
-            bouton = tk.Button(self.frame_accueil, text=enfant["prenom"], command=lambda i=i: self.afficher_profil(i))
-            bouton.pack(pady=5)
+    def afficher_profil(self, enfant):
+        """Affiche le profil d'un enfant et ses actions."""
+        self.frame_accueil.pack_forget()
+        
+        # Création du cadre pour le profil de l'enfant
+        frame_profil = tk.Frame(self.master)
+        frame_profil.pack(pady=20)
 
-    def creer_profil(self):
-        """Affiche un formulaire pour créer un nouveau profil enfant"""
-        fenetre_nouveau = tk.Toplevel(self.root)
+        # Informations de l'enfant
+        label_prenom = tk.Label(frame_profil, text=f"Profil de {enfant['prenom']}")
+        label_prenom.pack()
+
+        label_solde = tk.Label(frame_profil, text=f"Solde: {enfant['solde']}€")
+        label_solde.pack()
+
+        # Boutons d'actions
+        bouton_ajout = tk.Button(frame_profil, text="AJOUT", command=lambda: self.ajouter_fonds(enfant))
+        bouton_ajout.pack(pady=5)
+
+        bouton_retrait = tk.Button(frame_profil, text="RETRAIT", command=lambda: self.retirer_fonds(enfant))
+        bouton_retrait.pack(pady=5)
+
+        bouton_historique = tk.Button(frame_profil, text="HISTORIQUE", command=lambda: self.afficher_historique(enfant))
+        bouton_historique.pack(pady=5)
+
+        bouton_editer = tk.Button(frame_profil, text="EDITER", command=lambda: self.editer_profil(enfant))
+        bouton_editer.pack(pady=5)
+
+        bouton_retour = tk.Button(frame_profil, text="Retour", command=self.retour_accueil)
+        bouton_retour.pack(pady=10)
+
+    def ajouter_fonds(self, enfant):
+        """Ajoute des fonds au profil de l'enfant."""
+        montant_ajout = simpledialog.askfloat("Ajouter des fonds", "Montant à ajouter:")
+        if montant_ajout is not None and montant_ajout > 0:
+            enfant["solde"] += montant_ajout
+            enfant["historique"].append({"type": "crédit", "montant": montant_ajout, "date": "2025-01-04"})
+            messagebox.showinfo("Succès", f"{montant_ajout}€ ajoutés au profil de {enfant['prenom']}.")
+        else:
+            messagebox.showerror("Erreur", "Veuillez entrer un montant valide.")
+
+    def retirer_fonds(self, enfant):
+        """Retire des fonds du profil de l'enfant."""
+        montant_retrait = simpledialog.askfloat("Retirer des fonds", "Montant à retirer:")
+        if montant_retrait is not None and montant_retrait > 0 and montant_retrait <= enfant["solde"]:
+            options = []
+            if enfant["paypal"]:
+                options.append("Paypal")
+            if enfant["iban"]:
+                options.append("Banque")
+            options.append("Cash")
+            
+            option_retrait = simpledialog.askstring("Choisir méthode de retrait", f"Choisir méthode: {', '.join(options)}")
+
+            if option_retrait == "Cash":
+                enfant["solde"] -= montant_retrait
+                enfant["historique"].append({"type": "débit", "montant": montant_retrait, "date": "2025-01-04"})
+                messagebox.showinfo("Succès", f"{montant_retrait}€ retirés en cash.")
+            elif option_retrait == "Paypal" and enfant["paypal"]:
+                enfant["solde"] -= montant_retrait
+                enfant["historique"].append({"type": "débit", "montant": montant_retrait, "date": "2025-01-04"})
+                messagebox.showinfo("Succès", f"{montant_retrait}€ transférés vers Paypal.")
+            elif option_retrait == "Banque" and enfant["iban"]:
+                enfant["solde"] -= montant_retrait
+                enfant["historique"].append({"type": "débit", "montant": montant_retrait, "date": "2025-01-04"})
+                messagebox.showinfo("Succès", f"{montant_retrait}€ transférés vers le compte bancaire.")
+            else:
+                messagebox.showerror("Erreur", "Méthode de retrait non disponible.")
+        else:
+            messagebox.showerror("Erreur", "Montant invalidé ou insuffisant.")
+
+    def afficher_historique(self, enfant):
+        """Affiche l'historique des opérations."""
+        historique_window = tk.Toplevel(self.master)
+        historique_window.title(f"Historique de {enfant['prenom']}")
+        for operation in enfant["historique"]:
+            couleur = "green" if operation["type"] == "crédit" else "red"
+            label = tk.Label(historique_window, text=f"{operation['date']} - {operation['type']} de {operation['montant']}€", fg=couleur)
+            label.pack()
+
+    def editer_profil(self, enfant):
+        """Permet d'éditer le profil de l'enfant."""
+        self.frame_accueil.pack_forget()
+        
+        editer_window = tk.Toplevel(self.master)
+        editer_window.title(f"Editer le profil de {enfant['prenom']}")
+
+        # Champs pour éditer les informations
+        tk.Label(editer_window, text="Prénom:").pack()
+        entry_prenom = tk.Entry(editer_window)
+        entry_prenom.insert(0, enfant["prenom"])
+        entry_prenom.pack()
+
+        tk.Label(editer_window, text="Solde:").pack()
+        entry_solde = tk.Entry(editer_window)
+        entry_solde.insert(0, str(enfant["solde"]))
+        entry_solde.pack()
+
+        tk.Label(editer_window, text="Argent de poche:").pack()
+        entry_argent_poche = tk.Entry(editer_window)
+        entry_argent_poche.insert(0, str(enfant["argent_poche"]))
+        entry_argent_poche.pack()
+
+        tk.Label(editer_window, text="Fréquence:").pack()
+        entry_frequence = tk.Entry(editer_window)
+        entry_frequence.insert(0, enfant["frequence"])
+        entry_frequence.pack()
+
+        tk.Label(editer_window, text="Paypal:").pack()
+        entry_paypal = tk.Entry(editer_window)
+        entry_paypal.insert(0, enfant["paypal"])
+        entry_paypal.pack()
+
+        tk.Label(editer_window, text="IBAN:").pack()
+        entry_iban = tk.Entry(editer_window)
+        entry_iban.insert(0, enfant["iban"])
+        entry_iban.pack()
+
+        def valider_modifications():
+            enfant["prenom"] = entry_prenom.get()
+            enfant["solde"] = float(entry_solde.get())
+            enfant["argent_poche"] = float(entry_argent_poche.get())
+            enfant["frequence"] = entry_frequence.get()
+            enfant["paypal"] = entry_paypal.get()
+            enfant["iban"] = entry_iban.get()
+            editer_window.destroy()
+            self.afficher_profil(enfant)
+
+        bouton_valider = tk.Button(editer_window, text="Valider", command=valider_modifications)
+        bouton_valider.pack(pady=10)
+
+    def creer_nouveau_profil(self):
+        """Crée un nouveau profil pour un enfant."""
+        fenetre_nouveau = tk.Toplevel(self.master)
         fenetre_nouveau.title("Créer un nouveau profil")
 
-        tk.Label(fenetre_nouveau, text="Prénom de l'enfant:").pack(pady=5)
+        tk.Label(fenetre_nouveau, text="Prénom:").pack()
         entree_prenom = tk.Entry(fenetre_nouveau)
-        entree_prenom.pack(pady=5)
+        entree_prenom.pack()
 
-        tk.Label(fenetre_nouveau, text="Montant de départ:").pack(pady=5)
+        tk.Label(fenetre_nouveau, text="Solde:").pack()
         entree_solde = tk.Entry(fenetre_nouveau)
-        entree_solde.pack(pady=5)
+        entree_solde.pack()
 
-        tk.Label(fenetre_nouveau, text="Montant d'argent de poche:").pack(pady=5)
+        tk.Label(fenetre_nouveau, text="Argent de poche:").pack()
         entree_argent_poche = tk.Entry(fenetre_nouveau)
-        entree_argent_poche.pack(pady=5)
+        entree_argent_poche.pack()
 
-        tk.Label(fenetre_nouveau, text="Fréquence (hebdomadaire/mensuelle):").pack(pady=5)
+        tk.Label(fenetre_nouveau, text="Fréquence:").pack()
         entree_frequence = tk.Entry(fenetre_nouveau)
-        entree_frequence.pack(pady=5)
+        entree_frequence.pack()
 
-        tk.Label(fenetre_nouveau, text="Compte Paypal (optionnel):").pack(pady=5)
+        tk.Label(fenetre_nouveau, text="Paypal:").pack()
         entree_paypal = tk.Entry(fenetre_nouveau)
-        entree_paypal.pack(pady=5)
+        entree_paypal.pack()
 
-        tk.Label(fenetre_nouveau, text="IBAN (optionnel):").pack(pady=5)
+        tk.Label(fenetre_nouveau, text="IBAN:").pack()
         entree_iban = tk.Entry(fenetre_nouveau)
-        entree_iban.pack(pady=5)
+        entree_iban.pack()
 
-        def valider_creation_nouveau_profil():
-            """Valide la création d'un nouveau profil"""
+        def valider_creation():
             prenom = entree_prenom.get()
-            solde = entree_solde.get()
-            argent_poche = entree_argent_poche.get()
+            solde = float(entree_solde.get())
+            argent_poche = float(entree_argent_poche.get())
             frequence = entree_frequence.get()
             paypal = entree_paypal.get()
             iban = entree_iban.get()
 
-            if not prenom or not solde or not argent_poche or not frequence:
-                messagebox.showerror("Erreur", "Tous les champs obligatoires doivent être remplis.")
-                return
+            enfants.append({"prenom": prenom, "solde": solde, "argent_poche": argent_poche, "frequence": frequence,
+                            "paypal": paypal, "iban": iban, "historique": []})
 
-            try:
-                solde = float(solde)
-                argent_poche = float(argent_poche)
-            except ValueError:
-                messagebox.showerror("Erreur", "Le montant de départ et d'argent de poche doivent être des nombres.")
-                return
-
-            enfant = {
-                "prenom": prenom,
-                "solde": solde,
-                "argent_poche": argent_poche,
-                "frequence": frequence,
-                "paypal": paypal if paypal else None,
-                "iban": iban if iban else None,
-                "historique": []
-            }
-
-            self.enfants.append(enfant)
-            self.sauvegarder_enfants()
-            self.afficher_boutons_enfants()
             fenetre_nouveau.destroy()
+            self.afficher_boutons_enfants()
 
-        bouton_valider = tk.Button(fenetre_nouveau, text="Valider", command=valider_creation_nouveau_profil)
+        bouton_valider = tk.Button(fenetre_nouveau, text="Valider", command=valider_creation)
         bouton_valider.pack(pady=10)
 
-    def afficher_profil(self, index):
-        """Affiche les informations d'un enfant et propose des actions"""
-        enfant = self.enfants[index]
-        fenetre_profil = tk.Toplevel(self.root)
-        fenetre_profil.title(f"Profil de {enfant['prenom']}")
+    def retour_accueil(self):
+        """Retourne à l'écran d'accueil."""
+        self.frame_accueil.pack_forget()
+        self.afficher_boutons_enfants()
 
-        tk.Label(fenetre_profil, text=f"Prénom: {enfant['prenom']}").pack(pady=5)
-        tk.Label(fenetre_profil, text=f"Solde: {enfant['solde']}€").pack(pady=5)
-        tk.Label(fenetre_profil, text=f"Argent de poche: {enfant['argent_poche']}€").pack(pady=5)
-        tk.Label(fenetre_profil, text=f"Fréquence: {enfant['frequence']}").pack(pady=5)
 
-        bouton_ajout = tk.Button(fenetre_profil, text="AJOUT", command=lambda: self.ajouter_fonds(index))
-        bouton_ajout.pack(pady=5)
-
-        bouton_retrait = tk.Button(fenetre_profil, text="RETRAIT", command=lambda: self.retirer_fonds(index))
-        bouton_retrait.pack(pady=5)
-
-        bouton_historique = tk.Button(fenetre_profil, text="HISTORIQUE", command=lambda: self.afficher_historique(index))
-        bouton_historique.pack(pady=5)
-
-        bouton_modifier = tk.Button(fenetre_profil, text="EDITER", command=lambda: self.modifier_profil(index))
-        bouton_modifier.pack(pady=5)
-
-    def ajouter_fonds(self, index):
-        """Permet d'ajouter des fonds au profil d'un enfant"""
-        montant_ajout = simpledialog.askfloat("Ajouter des fonds", "Montant à ajouter:")
-        if montant_ajout and montant_ajout > 0:
-            self.enfants[index]["solde"] += montant_ajout
-            self.enfants[index]["historique"].append(f"Ajout de {montant_ajout}€")
-            self.sauvegarder_enfants()
-
-    def retirer_fonds(self, index):
-        """Permet de retirer des fonds du profil d'un enfant"""
-        montant_retrait = simpledialog.askfloat("Retirer des fonds", "Montant à retirer:")
-        if montant_retrait and montant_retrait > 0 and self.enfants[index]["solde"] >= montant_retrait:
-            self.enfants[index]["solde"] -= montant_retrait
-            self.enfants[index]["historique"].append(f"Retrait de {montant_retrait}€")
-            self.sauvegarder_enfants()
-        else:
-            messagebox.showerror("Erreur", "Montant invalide ou solde insuffisant.")
-
-    def afficher_historique(self, index):
-        """Affiche l'historique des transactions de l'enfant"""
-        enfant = self.enfants[index]
-        fenetre_historique = tk.Toplevel(self.root)
-        fenetre_historique.title(f"Historique de {enfant['prenom']}")
-
-        for transaction in enfant["historique"]:
-            label = tk.Label(fenetre_historique, text=transaction)
-            label.pack(pady=2)
-
-    def modifier_profil(self, index):
-        """Permet de modifier les informations d'un enfant"""
-        enfant = self.enfants[index]
-        fenetre_modifier = tk.Toplevel(self.root)
-        fenetre_modifier.title(f"Modifier le profil de {enfant['prenom']}")
-
-        # Ajouter les champs à modifier ici...
-        # Utilisez les mêmes champs que pour la création mais remplis avec les valeurs actuelles
-        # Puis, appliquez la modification en sauvegardant les nouvelles valeurs dans l'objet enfant
-
-def run():
+if __name__ == "__main__":
     root = tk.Tk()
     app = TirelireApp(root)
     root.mainloop()
-
-if __name__ == "__main__":
-    run()
-
 
