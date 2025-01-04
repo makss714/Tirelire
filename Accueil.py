@@ -17,14 +17,17 @@ class TirelireApp:
         self.afficher_boutons_enfants()
 
     def afficher_boutons_enfants(self):
+        # Détruire les widgets existants pour éviter les doublons
         for widget in self.frame_accueil.winfo_children():
             widget.destroy()
 
+        # Créer un bouton pour chaque enfant et le lier à son menu
         for enfant in self.enfants:
             bouton = tk.Button(self.frame_accueil, text=f"{enfant['prenom']}", command=lambda e=enfant: self.afficher_menu_enfant(e))
             bouton.pack(pady=5)
 
     def afficher_menu_enfant(self, enfant):
+        # Créer un menu pour chaque enfant
         menu_fenetre = tk.Toplevel(self.root)
         menu_fenetre.title(f"Options pour {enfant['prenom']}")
         
@@ -38,6 +41,7 @@ class TirelireApp:
         editer_button.pack(pady=10)
 
     def retrait_fonds(self, enfant):
+        # Créer la fenêtre de retrait
         fenetre_retrait = tk.Toplevel(self.root)
         fenetre_retrait.title("Retrait")
 
@@ -65,7 +69,12 @@ class TirelireApp:
             method_banque.config(state=tk.DISABLED)
 
         def valider_retrait():
-            montant = float(montant_retrait_entry.get())
+            try:
+                montant = float(montant_retrait_entry.get())
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer un montant valide.")
+                return
+
             if montant > enfant["solde"]:
                 messagebox.showerror("Erreur", "Le montant dépasse le solde disponible.")
                 return
@@ -91,6 +100,7 @@ class TirelireApp:
         valider_button.pack(pady=10)
 
     def afficher_historique(self, enfant):
+        # Créer la fenêtre d'historique
         fenetre_historique = tk.Toplevel(self.root)
         fenetre_historique.title(f"Historique des opérations de {enfant['prenom']}")
 
@@ -103,6 +113,7 @@ class TirelireApp:
             label.pack()
 
     def editer_profil(self, enfant):
+        # Créer la fenêtre d'édition du profil
         fenetre_editer = tk.Toplevel(self.root)
         fenetre_editer.title(f"Editer Profil de {enfant['prenom']}")
 
@@ -142,4 +153,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = TirelireApp(root)
     root.mainloop()
+
 
