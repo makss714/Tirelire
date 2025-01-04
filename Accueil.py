@@ -8,8 +8,8 @@ class TirelireApp:
 
         # Liste des enfants (avec les informations nécessaires pour le retrait)
         self.enfants = [
-            {"prenom": "Alice", "solde": 100.0, "paypal": "alice@example.com", "iban": "FR7612345678901234567890123", "historique": []},
-            {"prenom": "Bob", "solde": 50.0, "paypal": "", "iban": "", "historique": []}
+            {"prenom": "Alice", "solde": 100.0, "argent_poche": 10.0, "frequence": "hebdomadaire", "paypal": "alice@example.com", "iban": "FR7612345678901234567890123", "historique": []},
+            {"prenom": "Bob", "solde": 50.0, "argent_poche": 5.0, "frequence": "mensuelle", "paypal": "", "iban": "", "historique": []}
         ]
 
         self.frame_accueil = tk.Frame(self.root)
@@ -26,6 +26,10 @@ class TirelireApp:
             bouton = tk.Button(self.frame_accueil, text=f"{enfant['prenom']}", command=lambda e=enfant: self.afficher_menu_enfant(e))
             bouton.pack(pady=5)
 
+        # Ajouter un bouton pour créer un nouvel enfant
+        bouton_nouveau = tk.Button(self.frame_accueil, text="Ajouter un enfant", command=self.creer_nouveau_profil)
+        bouton_nouveau.pack(pady=5)
+
     def afficher_menu_enfant(self, enfant):
         # Créer un menu pour chaque enfant
         menu_fenetre = tk.Toplevel(self.root)
@@ -36,6 +40,9 @@ class TirelireApp:
         
         historique_button = tk.Button(menu_fenetre, text="Historique", command=lambda: self.afficher_historique(enfant))
         historique_button.pack(pady=10)
+
+        ajouter_button = tk.Button(menu_fenetre, text="Ajouter de l'argent", command=lambda: self.ajouter_argent(enfant))
+        ajouter_button.pack(pady=10)
 
         editer_button = tk.Button(menu_fenetre, text="Editer Profil", command=lambda: self.editer_profil(enfant))
         editer_button.pack(pady=10)
@@ -96,9 +103,6 @@ class TirelireApp:
             fenetre_retrait.destroy()
             self.afficher_boutons_enfants()
 
-        valider_button = tk.Button(fenetre_retrait, text="Valider", command=valider_retrait)
-        valider_button.pack(pady=10)
-
     def afficher_historique(self, enfant):
         # Créer la fenêtre d'historique
         fenetre_historique = tk.Toplevel(self.root)
@@ -148,10 +152,98 @@ class TirelireApp:
         valider_button = tk.Button(fenetre_editer, text="Valider", command=valider_editer)
         valider_button.pack(pady=10)
 
+    def ajouter_argent(self, enfant):
+        # Créer la fenêtre pour ajouter de l'argent
+        fenetre_ajouter = tk.Toplevel(self.root)
+        fenetre_ajouter.title(f"Ajouter de l'argent pour {enfant['prenom']}")
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = TirelireApp(root)
-    root.mainloop()
+        montant_ajout_label = tk.Label(fenetre_ajouter, text="Montant à ajouter :")
+        montant_ajout_label.pack(pady=5)
+
+        montant_ajout_entry = tk.Entry(fenetre_ajouter)
+        montant_ajout_entry.pack(pady=5)
+
+        def valider_ajout():
+            try:
+                montant = float(montant_ajout_entry.get())
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer un montant valide.")
+                return
+
+            enfant["solde"] += montant
+            messagebox.showinfo("Succès", f"{montant}€ ajoutés au solde de {enfant['prenom']}.")
+            fenetre_ajouter.destroy()
+
+        valider_button = tk.Button(fenetre_ajouter, text="Valider", command=valider_ajout)
+        valider_button.pack(pady=10)
+
+    def creer_nouveau_profil(self):
+        # Créer la fenêtre pour créer un nouveau profil
+        fenetre_nouveau = tk.Toplevel(self.root)
+        fenetre_nouveau.title("Créer un nouveau profil")
+
+        label_prenom = tk.Label(fenetre_nouveau, text="Prénom :")
+        label_prenom.pack(pady=5)
+
+        entry_prenom = tk.Entry(fenetre_nouveau)
+        entry_prenom.pack(pady=5)
+
+        label_montant_depart = tk.Label(fenetre_nouveau, text="Montant de départ :")
+        label_montant_depart.pack(pady=5)
+
+        entry_montant_depart = tk.Entry(fenetre_nouveau)
+        entry_montant_depart.pack(pady=5)
+
+        label_argent_poche = tk.Label(fenetre_nouveau, text="Montant d'argent de poche :")
+        label_argent_poche.pack(pady=5)
+
+        entry_argent_poche = tk.Entry(fenetre_nouveau)
+        entry_argent_poche.pack(pady=5)
+
+        label_frequence = tk.Label(fenetre_nouveau, text="Fréquence (hebdomadaire ou mensuelle) :")
+        label_frequence.pack(pady=5)
+
+        entry_frequence = tk.Entry(fenetre_nouveau)
+        entry_frequence.pack(pady=5)
+
+        label_paypal = tk.Label(fenetre_nouveau, text="PayPal (optionnel) :")
+        label_paypal.pack(pady=5)
+
+        entry_paypal = tk.Entry(fenetre_nouveau)
+        entry_paypal.pack(pady=5)
+
+        label_iban = tk.Label(fenetre_nouveau, text="IBAN (optionnel) :")
+        label_iban.pack(pady=5)
+
+        entry_iban = tk.Entry(fenetre_nouveau)
+        entry_iban.pack(pady=5)
+
+        def valider_creation():
+            prenom = entry_prenom.get()
+            try:
+                montant_depart = float(entry_montant_depart.get())
+                argent_poche = float(entry_argent_poche.get())
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer des montants valides.")
+                return
+
+            frequence = entry_frequence.get()
+            paypal = entry_paypal.get()
+            iban = entry_iban.get()
+
+            # Ajouter l'enfant à la liste des enfants
+            self.enfants.append({"prenom": prenom, "solde": montant_depart, "argent_poche": argent_poche, "frequence": frequence, "paypal": paypal, "iban": iban, "historique": []})
+            messagebox.showinfo("Succès", f"Profil de {prenom} créé avec succès.")
+            fenetre_nouveau.destroy()
+            self.afficher_boutons_enfants()
+
+        valider_button = tk.Button(fenetre_nouveau, text="Valider", command=valider_creation)
+        valider_button.pack(pady=10)
+
+# Création de la fenêtre principale
+root = tk.Tk()
+app = TirelireApp(root)
+root.mainloop()
+
 
 
