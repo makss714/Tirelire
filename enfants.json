@@ -1,23 +1,17 @@
-{
-    "John Doe": {
-        "nom": "John Doe",
-        "solde": 100.0,
+[
+    {
+        "prenom": "Alice",
+        "solde": 50,
+        "argent_de_poche": 10,
         "frequence": "mensuelle",
-        "paypal": "johnpaypal@example.com",
-        "iban": "FR7630006000012345678901234",
-        "historique": [
-            {"action": "ajout", "montant": 50.0, "date": "2025-01-01 12:00:00"},
-            {"action": "retrait", "montant": 20.0, "mode": "Cash", "date": "2025-01-02 14:00:00"}
-        ]
+        "paypal": "paypal@example.com",
+        "iban": "FR761234567890"
     },
-    "Jane Smith": {
-        "nom": "Jane Smith",
-        "solde": 50.0,
-        "frequence": "hebdomadaire",
-        "paypal": "",
-        "iban": "",
-        "historique": [
-            {"action": "ajout", "montant": 20.0, "date": "2025-01-01 12:00:00"}
-        ]
+    {
+        "prenom": "Bob",
+        "solde": 100,
+        "argent_de_poche": 20,
+        "frequence": "hebdomadaire"
     }
-}
+]
+
