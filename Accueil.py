@@ -37,11 +37,15 @@ class TirelireApp:
 
     def afficher_boutons_enfants(self):
         """Affiche un bouton pour chaque enfant dans le profil"""
+        # D'abord, on nettoie le frame de l'interface pour éviter les doublons de boutons
         for widget in self.frame_accueil.winfo_children():
-            widget.destroy()  # Efface les anciens widgets
+            if widget != self.bouton_creation:  # Conserver le bouton de création
+                widget.destroy()  # Efface les anciens widgets
 
+        # Afficher de nouveau le bouton de création
         self.bouton_creation.pack(pady=10)
 
+        # Afficher les boutons des enfants
         for i, enfant in enumerate(self.enfants):
             bouton = tk.Button(self.frame_accueil, text=enfant["prenom"], command=lambda i=i: self.afficher_profil(i))
             bouton.pack(pady=5)
@@ -171,10 +175,15 @@ class TirelireApp:
         fenetre_modifier.title(f"Modifier le profil de {enfant['prenom']}")
 
         # Ajouter les champs à modifier ici...
-        # Utilisez les mêmes champs que pour la création mais remplis avec les données actuelles de l'enfant
+        # Utilisez les mêmes champs que pour la création mais remplis avec les valeurs actuelles
+        # Puis, appliquez la modification en sauvegardant les nouvelles valeurs dans l'objet enfant
 
-if __name__ == "__main__":
+def run():
     root = tk.Tk()
     app = TirelireApp(root)
     root.mainloop()
+
+if __name__ == "__main__":
+    run()
+
 
